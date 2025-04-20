@@ -16,8 +16,9 @@ module.exports = async (req, res) => {
       .limit(1)
       .get();
 
-    if (snapshot.empty) return res.status(404).json({ message: "Box not found" });
-
+      if (snapshot.empty) {
+        return res.status(404).json({ message: "Box not found", path: [] }); // ✅ มี path: [] กัน frontend พัง
+      }
     const deliveryId = snapshot.docs[0].id;
     const positionsSnapshot = await db.collection("deliveries").doc(deliveryId).collection("positions").orderBy("timestamp", "asc").get();
 
