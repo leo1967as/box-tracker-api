@@ -21,7 +21,10 @@ export default async function handler(req, res) {
     if (snapshot.empty) {
       return res.status(404).json({ message: "Box not found" });
     }
-
+    
+    if (typeof boxNumber !== "string") {
+      return res.status(400).json({ message: "boxNumber must be a string" });
+    }
     const deliveryId = snapshot.docs[0].id;
     const positionsSnapshot = await db
       .collection("deliveries")
@@ -30,10 +33,18 @@ export default async function handler(req, res) {
       .orderBy("timestamp", "asc")
       .get();
 
-    const path = positionsSnapshot.docs.map((doc) => doc.data());
+      const path = positionsSnapshot.docs.map((doc) => ({
+        lat: doc.data().lat,
+        lng: doc.data().lng,
+        timestamp: doc.data().timestamp.toDate().toISOString()}));
     return res.status(200).json({ boxNumber, path });
   } catch (error) {
-    console.error("❌ get-path error:", error);
+    // เพิ่มส่วนนี้แทน console.error เดิม
+    console.error("Error:", {
+      message: error.message,
+      stack: error.stack,
+      request: req.query || req.body
+    });
     return res.status(500).json({ message: "Internal server error" });
   }
 }

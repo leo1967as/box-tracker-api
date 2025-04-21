@@ -37,7 +37,12 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ message: "Position updated" });
   } catch (error) {
-    console.error("❌ ERROR:", error);
+    // เพิ่มส่วนนี้แทน console.error เดิม
+    console.error("Error:", {
+      message: error.message,
+      stack: error.stack,
+      request: req.query || req.body
+    });
     return res.status(500).json({ message: "Internal server error" });
   }
 }
