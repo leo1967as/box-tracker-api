@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>การขนส่ง</title>
+  <link rel="stylesheet" href="css/delivery.css">
+  <link rel="stylesheet" href="css/navbar.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">MyWebApp 🚀</div>
+    <ul class="nav-links">
+      <li><a href="index.html">หน้าแรก</a></li>
+      <li><a href="routes.html">เส้นทาง</a></li>
+      <li><a href="delivery-history.html">ประวัติการส่ง</a></li>
+      <li><a href="organizations.html">หน่วยงาน</a></li>
+      <li><a href="delivery.html" class="active">การขนส่ง</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <h1><i class="fas fa-box"></i> ฟอร์มการขนส่งสิ่งของ</h1>
+
+    <!-- ✅ ค้นหา + ฟิลเตอร์ -->
+    <div class="search-filter-container">
+      <input type="text" id="searchInput" placeholder="ค้นหาจากชื่อผู้ส่ง, เลขกล่อง, หมายเหตุ">
+      <select id="filterSelect">
+        <option value="all">ทั้งหมด</option>
+        <option value="pending">รอส่ง</option>
+        <option value="completed">ส่งแล้ว</option>
+      </select>
+    </div>
+
+    <!-- ✅ ตารางแสดงรายการ -->
+    <table class="delivery-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>เลขกล่อง</th>
+          <th>ชื่อผู้ส่ง</th>
+          <th>ส่งจาก</th>
+          <th>ถึง</th>
+          <th>รายการสิ่งของ</th>
+          <th>หมายเหตุ</th>
+          <th>วันเวลา</th>
+          <th>การจัดการ</th>
+        </tr>
+      </thead>
+      <tbody id="deliveryTableBody">
+        <!-- แสดงข้อมูลจาก JS -->
+      </tbody>
+    </table>
+
+<!-- 🔻 Pagination Control -->
+<div class="table-controls">
+    <label>
+      แสดง
+      <select id="entriesPerPage">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+      รายการต่อหน้า
+    </label>
+  
+    <div class="pagination" id="paginationControls">
+        <button id="firstPage">หน้าแรก</button>
+        <button id="prevPage">ก่อนหน้า</button>
+        <span id="pageInfo">หน้า 1 จาก 1</span>
+        <button id="nextPage">ถัดไป</button>
+        <button id="lastPage">หน้าสุดท้าย</button>
+      </div>
+      
+  </div>
+  
+
+  <!-- ✅ ปุ่มเปิด Modal -->
+  <button id="openModalBtn" class="floating-btn">
+    <i class="fas fa-plus"></i> เพิ่มรายการ
+  </button>
+
+  <!-- ✅ Modal ฟอร์ม -->
+  <div id="deliveryModal" class="modal hidden">
+    <div class="modal-content">
+      <form id="deliveryForm" class="delivery-form">
+        <h2><i class="fas fa-truck"></i> เพิ่มรายการส่งของ</h2>
+
+        <div class="form-grid">
+          <div class="form-group custom-width">
+            <label for="sender"><i class="fas fa-user"></i> ชื่อผู้ส่ง:</label>
+            <input type="text" id="sender" placeholder="กรอกชื่อผู้ส่ง" required />
+          </div>
+
+          <div class="form-group custom-width">
+            <label for="fromLocation"><i class="fas fa-map-marker-alt"></i> ส่งจาก:</label>
+            <select id="fromLocation" required>
+              <option value="">เลือกสถานที่ส่งจาก</option>
+            </select>
+          </div>
+
+          <div class="form-group custom-width">
+            <label for="boxNumber"><i class="fas fa-barcode"></i> เลขกล่อง:</label>
+            <input type="text" id="boxNumber" placeholder="ระบุเลขกล่อง" />
+          </div>
+
+          <div class="form-group custom-width">
+            <label for="organization"><i class="fas fa-building"></i> หน่วยงานปลายทาง:</label>
+            <select id="organization" required>
+              <option value="">เลือกหน่วยงานปลายทาง</option>
+            </select>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="status"><i class="fas fa-info-circle"></i> สถานะ:</label>
+            <select id="status" required>
+              <option value="pending">รอส่ง</option>
+              <option value="completed">ส่งแล้ว</option>
+            </select>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="note"><i class="fas fa-sticky-note"></i> หมายเหตุ:</label>
+            <textarea id="note" placeholder="เช่น เร่งด่วน, ของเสีย" rows="3"></textarea>
+          </div>
+        </div>
+        <label for="ADD"><i class="fas fa-sticky-note"></i> รายการ:</label>
+        <div id="itemsContainer" class="items-container"></div>
+
+        <div class="button-group">
+          <button type="button" id="addItemBtn" class="btn-secondary">
+            <i class="fas fa-plus"></i> เพิ่มรายการ
+          </button>
+          <button type="submit" class="btn-primary">
+            <i class="fas fa-truck"></i> ส่งของ
+          </button>
+          <button type="button" id="cancelDelivery" class="btn-danger">
+            <i class="fas fa-times"></i> ยกเลิก
+          </button>
+        </div>
+
+        <p id="statusMessage" class="status-message"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ✅ เชื่อม JS Pagination -->
+
+  <!-- ✅ Main Script -->
+  <script src="js/delivery.js"></script>
+  <script src="js/delivery_edit.js"></script>
+  
+</body>
+</html>

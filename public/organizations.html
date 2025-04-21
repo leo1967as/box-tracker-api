@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>หน่วยงาน</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/organizations.css">
+    <link rel="stylesheet" href="css/navbar.css" />
+  <!-- Firebase -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">MyWebApp 🚀</div>
+    <ul class="nav-links">
+      <li><a href="index.html">หน้าแรก</a></li>
+      <li><a href="routes.html">เส้นทาง</a></li>
+      <li><a href="delivery-history.html">ประวัติการส่ง</a></li>
+      <li><a href="organizations.html">หน่วยงาน</a></li>
+      <li><a href="delivery.html">การขนส่ง</a></li>
+    </ul>
+  </nav>
+  <div class="container">
+    <h1><i class="fas fa-map-marker-alt"></i> แผนที่เพิ่มหน่วยงาน</h1>
+
+    <h2></h2>
+    <div id="map" style="width: 100%; height: 400px;"></div>
+    <p id="selected-coord">📌 กรุณาคลิกที่แผนที่เพื่อเลือกพิกัด</p>
+    <h2 style="margin-top: 2rem;">📋 รายชื่อหน่วยงานทั้งหมด</h2>
+    <!-- 🔍 Search & Add Button Grid -->
+    <div class="search-action-bar">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="ค้นหา..." />
+      </div>
+      <button id="openModalBtn" disabled>➕ เพิ่มหน่วยงาน</button>
+    </div>
+
+    <!-- Modal เพิ่มหน่วยงาน -->
+    <div id="modal" class="modal hidden">
+      <div class="modal-content">
+        <h3>เพิ่มหน่วยงาน</h3>
+        <label for="hospitalName">ชื่อหน่วยงาน:</label>
+        <input type="text" id="hospitalName" placeholder="กรอกชื่อหน่วยงาน" />
+        <div class="button-group">
+          <button id="cancelBtn">❌ ปิด</button>
+          <button id="saveBtn">✅ ยืนยัน</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal แก้ไขหน่วยงาน -->
+    <div id="editModal" class="modal hidden">
+      <div class="modal-content">
+        <h3>✏️ แก้ไขหน่วยงาน</h3>
+        <label for="editHospitalName">ชื่อหน่วยงาน:</label>
+        <input type="text" id="editHospitalName" placeholder="กรอกชื่อหน่วยงานใหม่" />
+        <div class="button-group">
+          <button id="editCancelBtn">❌ ยกเลิก</button>
+          <button id="editConfirmBtn">✅ บันทึก</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal ลบหน่วยงาน -->
+    <div id="deleteModal" class="modal hidden">
+      <div class="modal-content">
+        <h3>⚠️ ยืนยันการลบ</h3>
+        <p>คุณแน่ใจหรือไม่ว่าต้องการลบหน่วยงานนี้?</p>
+        <div class="button-group">
+          <button id="deleteCancelBtn">❌ ยกเลิก</button>
+          <button id="deleteConfirmBtn">🗑️ ลบเลย</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- รายการหน่วยงาน -->
+
+    <table class="org-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>หน่วยงาน</th>
+          <th>พิกัด</th>
+          <th>วันที่สร้าง</th>
+          <th>การจัดการ</th>
+        </tr>
+      </thead>
+      <tbody id="orgTableBody">
+        <tr><td colspan="5">⏳ กำลังโหลด...</td></tr>
+      </tbody>
+    </table>
+   <!-- ในส่วนของ table-controls หลังตาราง -->
+<div class="table-controls">
+    <label>
+      แสดง
+      <select id="entriesPerPage">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+      รายการต่อหน้า
+    </label>
+    <div class="pagination">
+      <button id="firstPage">หน้าแรก</button>
+      <button id="prevPage">ก่อนหน้า</button>
+      <span id="pageInfo">หน้า 1 จาก 1</span>
+      <button id="nextPage">ถัดไป</button>
+      <button id="lastPage">หน้าสุดท้าย</button>
+    </div>
+  </div>
+
+  <script src="js/organizations.js"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDsGCBKGEvufoikZgscLJSxi-wQ28_c9GQ&callback=initMap"></script>
+</body>
+</html>

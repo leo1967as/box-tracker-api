@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My WebApp</title>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="css/navbar.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="logo">MyWebApp 🚀</div>
+    <ul class="nav-links">
+      <li><a href="index.html">หน้าแรก</a></li>
+      <li><a href="routes.html">เส้นทาง</a></li>
+      <li><a href="delivery-history.html">ประวัติการส่ง</a></li>
+      <li><a href="organizations.html">หน่วยงาน</a></li>
+      <li><a href="delivery.html">การขนส่ง</a></li>
+    </ul>
+  </nav>
+
+  <h2>📍 พิกัดตำแหน่งจาก GPS (Google Maps)</h2>
+  <div id="map"></div>
+
+  <div style="margin: 1em">
+    <label>Box Number: <input type="text" id="boxNumber" placeholder="e.g. BX001" /></label>
+    <button onclick="startAutoTracking(document.getElementById('boxNumber').value)">🚀 เริ่มติดตามอัตโนมัติ</button>
+  </div>
+
+  <h3>📏 คำนวณระยะทางจากตำแหน่งคุณ → จุดที่คลิก</h3>
+  <div>
+    <label>Latitude: <input type="text" id="latInput" readonly></label>
+    <label>Longitude: <input type="text" id="lngInput" readonly></label>
+  </div>
+  <p id="distance-output">📍 คลิกบนแผนที่เพื่อดูระยะทางและเวลา</p>
+
+  <!-- JS ของเรา -->
+  <script>
+    let map;
+    let polyline;
+    let markers = [];
+    let trackingInterval = null;
+    let currentBox = null;
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 13.7563, lng: 100.5018 },
+        zoom: 12,
+      });
+    }
+
+    function startAutoTracking(boxNumber) {
+      if (!boxNumber) return alert("กรุณาระบุ boxNumber");
+      if (trackingInterval) clearInterval(trackingInterval);
+      currentBox = boxNumber;
+
+      loadPath(currentBox); // โหลดทันที
+
+      trackingInterval = setInterval(() => {
+        loadPath(currentBox);
+      }, 5000); // 5 วินาที
+    }
+
+    async function loadPath(boxNumberInput = null) {
+      const boxNumber = boxNumberInput || document.getElementById("boxNumber").value.trim();
+      if (!boxNumber) return;
+
+      const res = await fetch(`/api/get-path?boxNumber=${boxNumber}`);
+      const data = await res.json();
+      if (!data.path || data.path.length === 0) {
+        console.log("ไม่พบเส้นทาง");
+        return;
+      }
+
+      markers.forEach((m) => m.setMap(null));
+      markers = [];
+      if (polyline) polyline.setMap(null);
+
+      const pathCoords = data.path.map((p) => ({ lat: p.lat, lng: p.lng }));
+
+      polyline = new google.maps.Polyline({
+        path: pathCoords,
+        geodesic: true,
+        strokeColor: "#28a745",
+        strokeOpacity: 1.0,
+        strokeWeight: 3,
+      });
+      polyline.setMap(map);
+
+      pathCoords.forEach((pos, i) => {
+        const marker = new google.maps.Marker({
+          position: pos,
+          label: `${i + 1}`,
+          map: map,
+        });
+        markers.push(marker);
+      });
+
+      map.panTo(pathCoords[pathCoords.length - 1]);
+    }
+  </script>
+
+  <!-- โหลด Google Maps API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDsGCBKGEvufoikZgscLJSxi-wQ28_c9GQ&callback=initMap" async defer></script>
+</body>
+</html>

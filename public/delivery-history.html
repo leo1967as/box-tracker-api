@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📦 ประวัติการส่งกล่อง</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- ใส่ไว้ใน <head> -->
+<link rel="stylesheet" href="css/navbar.css" />
+
+  <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.googleapis.com https://*.gstatic.com; style-src 'self' 'unsafe-inline';"> -->
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+  <!-- Navbar เดิม -->
+  <nav class="navbar">
+    <div class="logo">MyWebApp 🚀</div>
+    <ul class="nav-links">
+      <li><a href="index.html">หน้าแรก</a></li>
+      <li><a href="routes.html">เส้นทาง</a></li>
+      <li><a href="delivery-history.html">ประวัติการส่ง</a></li>
+      <li><a href="organizations.html">หน่วยงาน</a></li>
+      <li><a href="delivery.html">การขนส่ง</a></li>
+    </ul>
+  </nav>
+
+  <!-- เนื้อหาหลัก -->
+  <div class="content-wrapper">
+    <h1>📦 ประวัติการส่งกล่องทั้งหมด</h1>
+    
+    <div class="filter-controls">
+      <select id="statusFilter">
+        <option value="all">ทั้งหมด</option>
+        <option value="ส่งแล้ว">กำลังส่ง</option>
+        <option value="ถึงแล้ว">ส่งสำเร็จ</option>
+      </select>
+      
+      <input type="date" id="dateFilter">
+      
+      <select id="routeFilter">
+        <option value="all">เส้นทางทั้งหมด</option>
+        <!-- จะเติมด้วย JavaScript -->
+      </select>
+      
+      <button id="applyFilter">🔍 ใช้ตัวกรอง</button>
+      <button id="resetFilter">🔄 ล้างตัวกรอง</button>
+    </div>
+    
+    <div id="deliveriesContainer">⌛ กำลังโหลดข้อมูล...</div>
+  </div>
+
+  <script>
+    // คอนฟิก Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDj4aYtdPAI3-uWGKUUcScYaTn66vhuTHt4",
+      authDomain: "tissueboxdb.firebaseapp.com",
+      projectId: "tissueboxdb",
+      storageBucket: "tissueboxdb.appspot.com",
+      messagingSenderId: "578294379663",
+      appId: "1:578294379663:web:592d86722575dcc1676cfa",
+      measurementId: "G-CE000PRNNC"
+    };
+
+    // เริ่มต้น Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    
+    // ตัวแปรเก็บเส้นทางทั้งหมด
+    let allRoutes = [];
+    let allDeliveries = [];
+
+    // โหลดเส้นทางจาก Firestore
+    async function loadRoutes() {
+      try {
+        const snapshot = await db.collection("routes").get();
+        allRoutes = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            routeText: `${data.start} → ${data.end}`
+          };
+        });
+        
+        // เติมข้อมูลใน dropdown กรองเส้นทาง
+        const routeFilter = document.getElementById("routeFilter");
+        allRoutes.forEach(route => {
+          const option = document.createElement("option");
+          option.value = route.routeText;
+          option.textContent = route.routeText;
+          routeFilter.appendChild(option);
+        });
+      } catch (error) {
+        console.error("เกิดข้อผิดพลาดในการโหลดเส้นทาง:", error);
+      }
+    }
+
+    // โหลดประวัติการส่ง
+    async function loadDeliveries(filter = {}) {
+      const container = document.getElementById("deliveriesContainer");
+      container.innerHTML = "⌛ กำลังโหลดข้อมูล...";
+      
+      try {
+        let query = db.collection("deliveries").orderBy("createdAt", "desc");
+        
+        // ใช้ตัวกรองสถานะ
+        if (filter.status && filter.status !== "all") {
+          query = query.where("status", "==", filter.status);
+        }
+        
+        // ใช้ตัวกรองวันที่
+        if (filter.date) {
+          const startDate = new Date(filter.date);
+          startDate.setHours(0, 0, 0, 0);
+          
+          const endDate = new Date(filter.date);
+          endDate.setHours(23, 59, 59, 999);
+          
+          query = query.where("createdAt", ">=", startDate)
+                      .where("createdAt", "<=", endDate);
+        }
+        
+        // ใช้ตัวกรองเส้นทาง
+        if (filter.route && filter.route !== "all") {
+          const [start, end] = filter.route.split(" → ");
+          query = query.where("start", "==", start)
+                      .where("end", "==", end);
+        }
+        
+        const snapshot = await query.limit(100).get();
+        
+        if (snapshot.empty) {
+          container.innerHTML = "❌ ไม่พบข้อมูลการส่งที่ตรงกับเงื่อนไข";
+          return;
+        }
+        
+        allDeliveries = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        renderDeliveries(allDeliveries);
+      } catch (error) {
+        console.error("เกิดข้อผิดพลาดในการโหลดประวัติการส่ง:", error);
+        container.innerHTML = `❌ เกิดข้อผิดพลาด: ${error.message}`;
+      }
+    }
+    
+    // แสดงผลข้อมูลการส่ง
+    function renderDeliveries(deliveries) {
+      const container = document.getElementById("deliveriesContainer");
+      
+      if (deliveries.length === 0) {
+        container.innerHTML = "❌ ไม่พบข้อมูลการส่ง";
+        return;
+      }
+      
+      container.innerHTML = "";
+      
+      deliveries.forEach(delivery => {
+        const startTime = delivery.startTime?.toDate?.();
+        const stopTime = delivery.stopTime?.toDate?.();
+        
+        // หาเวลามาตรฐานจาก allRoutes
+        const route = allRoutes.find(r => 
+          r.start === delivery.start && r.end === delivery.end
+        );
+        const standardDuration = route?.duration || delivery.standardDuration;
+        
+        // สร้างการ์ดแสดงผล
+        const card = document.createElement("div");
+        card.className = "delivery-card";
+        
+        // หัวข้อการ์ด
+        const title = document.createElement("h4");
+        title.textContent = `${delivery.itemName} → ${delivery.receiverName}`;
+        card.appendChild(title);
+        
+        // เส้นทาง
+        const routeInfo = document.createElement("p");
+        routeInfo.innerHTML = `<strong>เส้นทาง:</strong> ${delivery.start} → ${delivery.end}`;
+        card.appendChild(routeInfo);
+        
+        // เวลาเริ่มส่ง
+        const startTimeDiv = document.createElement("div");
+        startTimeDiv.innerHTML = `<strong>เวลาเริ่มส่ง:</strong> ${startTime ? startTime.toLocaleString() : 'N/A'}`;
+        card.appendChild(startTimeDiv);
+        
+        // สถานะ
+        const statusDiv = document.createElement("div");
+        statusDiv.innerHTML = `<strong>สถานะ:</strong> <span class="status-${delivery.status === 'ถึงแล้ว' ? 'delivered' : 'sending'}">${delivery.status}</span>`;
+        card.appendChild(statusDiv);
+        
+        // ถ้าส่งแล้ว แสดงข้อมูลเพิ่มเติม
+        if (delivery.status === "ถึงแล้ว") {
+          // เวลาที่ถึง
+          const stopTimeDiv = document.createElement("div");
+          stopTimeDiv.innerHTML = `<strong>เวลาที่ถึง:</strong> ${stopTime ? stopTime.toLocaleString() : 'N/A'}`;
+          card.appendChild(stopTimeDiv);
+          
+          // เวลาที่ใช้
+          const durationDiv = document.createElement("div");
+          durationDiv.innerHTML = `<strong>เวลาที่ใช้:</strong> ${delivery.actualDuration} นาที (มาตรฐาน: ${standardDuration || 'N/A'} นาที)`;
+          card.appendChild(durationDiv);
+
+        }
+
+        container.appendChild(card);
+      });
+    }
+
+    // เชื่อมปุ่มตัวกรอง
+    document.getElementById("applyFilter").addEventListener("click", () => {
+      const status = document.getElementById("statusFilter").value;
+      const date = document.getElementById("dateFilter").value;
+      const route = document.getElementById("routeFilter").value;
+
+      loadDeliveries({ status, date, route });
+    });
+
+    // ปุ่มล้างตัวกรอง
+    document.getElementById("resetFilter").addEventListener("click", () => {
+      document.getElementById("statusFilter").value = "all";
+      document.getElementById("dateFilter").value = "";
+      document.getElementById("routeFilter").value = "all";
+      loadDeliveries(); // โหลดใหม่ทั้งหมด
+    });
+
+    // โหลดข้อมูลทั้งหมดเมื่อเปิดหน้า
+    loadRoutes().then(() => {
+      loadDeliveries();
+    });
+  </script>
+
+  <!-- แถม CSS เล็กน้อยให้น่ารักขึ้น -->
+  <style>
+    .content-wrapper {
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .filter-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .filter-controls select,
+    .filter-controls input[type="date"],
+    .filter-controls button {
+      padding: 0.4rem 0.8rem;
+      font-size: 1rem;
+    }
+    .delivery-card {
+      border: 1px solid #ddd;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      background-color: #fffefc;
+    }
+    .delivery-card h4 {
+      margin-top: 0;
+      color: #333;
+    }
+    .status-delivered {
+      color: green;
+      font-weight: bold;
+    }
+    .status-sending {
+      color: orange;
+      font-weight: bold;
+    }
+  </style>
+</body>
+</html>

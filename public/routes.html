@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🧭 เส้นทางทั้งหมด</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- ใส่ไว้ใน <head> -->
+<link rel="stylesheet" href="css/navbar.css" />
+
+  <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.googleapis.com https://*.gstatic.com; style-src 'self' 'unsafe-inline';"> -->
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    .content-wrapper {
+      padding: 2rem;
+    }
+    .route-card {
+      border-bottom: 1px dashed #ccc;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ✅ Navbar เดิม -->
+  <nav class="navbar">
+    <div class="logo">MyWebApp 🚀</div>
+    <ul class="nav-links">
+      <li><a href="index.html">หน้าแรก</a></li>
+      <li><a href="routes.html">เส้นทาง</a></li>
+      <li><a href="delivery-history.html">ประวัติการส่ง</a></li>
+      <li><a href="organizations.html">หน่วยงาน</a></li>
+      <li><a href="delivery.html">การขนส่ง</a></li>
+    </ul>
+  </nav>
+
+  <!-- ✅ เนื้อหาหลัก -->
+  <div class="content-wrapper">
+    <h1>📦 รายการเส้นทางทั้งหมดจาก Firebase</h1>
+    <div id="routesContainer">⌛ กำลังโหลด...</div>
+  </div>
+
+  <script>
+    // 🔧 Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDj4aYtdPAI3-uWGKUUcScYaTn66vhuTHt4",
+      authDomain: "tissueboxdb.firebaseapp.com",
+      projectId: "tissueboxdb",
+      storageBucket: "tissueboxdb.appspot.com",
+      messagingSenderId: "578294379663",
+      appId: "1:578294379663:web:592d86722575dcc1676cfa",
+      measurementId: "G-CE000PRNNC"
+    };
+
+    // ✅ เริ่มต้น Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // ✅ ดึงข้อมูลจาก Firestore
+    async function loadRoutes() {
+      const container = document.getElementById("routesContainer");
+      try {
+        const snapshot = await db.collection("routes").orderBy("savedAt", "desc").get();
+        if (snapshot.empty) {
+          container.innerHTML = "❌ ยังไม่มีข้อมูลเส้นทางใน Firebase";
+          return;
+        }
+
+        container.innerHTML = "";
+        snapshot.forEach(doc => {
+            
+          const data = doc.data();
+          const savedAtDate = data.savedAt?.toDate?.(); // Firebase Timestamp -> Date
+// const dateText = savedAtDate ? savedAtDate.toLocaleString() : "N/A";
+        const dateText = savedAtDate
+        ? savedAtDate.toLocaleString("th-TH", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+            })
+        : "N/A";
+          const html = `
+          
+            <div class="route-card">
+              🧭 <b>${data.start}</b> → <b>${data.end}</b><br/>
+              ⏱️ ระยะเวลา: ${data.duration} นาที<br/>
+              🗓️ บันทึกเมื่อ: ${dateText}
+            </div>
+          `;
+          container.innerHTML += html;
+        });
+      } catch (err) {
+        container.innerHTML = "❌ เกิดข้อผิดพลาด: " + err.message;
+        console.error(err);
+      }
+    }
+
+    loadRoutes();
+  </script>
+</body>
+</html>

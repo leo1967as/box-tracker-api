@@ -1,0 +1,517 @@
+
+/* ===== พื้นฐาน Layout ===== */
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f3f4f6;
+    color: #333;
+  }
+  
+  
+  h1, h2 {
+    text-align: center;
+    color: #111827;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* ===== ปุ่มทั่วไป ===== */
+  button {
+    font-size: 1rem;
+    padding: 0.6rem 1.25rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #2563eb;
+    color: white;
+    transition: background 0.2s;
+  }
+  
+  button:hover {
+    background: #1e40af;
+    filter: brightness(0.9);
+
+  }
+
+
+  button.remove-btn {
+    background-color: #ef4444;
+  }
+  
+  button.cancel-btn {
+    background: #ef4444;
+  }
+  
+  /* ===== Modal Overlay ===== */
+  .modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  
+  .modal.hidden {
+    display: none;
+  }
+  
+  .modal-content {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 640px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    padding: 2rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  /* ===== ฟอร์มการขนส่ง ===== */
+  .delivery-form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .form-row {
+    margin-bottom: 1rem;
+  }
+  
+  .form-row label {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    display: block;
+  }
+  
+  input[type="text"],
+  input[type="number"],
+  select {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    background: white;
+  }
+  
+  /* ===== กล่องรายการสิ่งของ ===== */
+  .items-container {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .item-group {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  
+  .item-group input {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+  }
+  
+  .remove-btn {
+    font-size: 1.25rem;
+    padding: 0.45rem 0.75rem;
+  }
+  
+  /* ===== ปุ่มด้านล่าง ===== */
+  .button-group {
+    display: flex;
+    justify-content: flex-start;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  
+  #statusMessage {
+    text-align: center;
+    font-weight: bold;
+    margin-top: 1rem;
+    color: #16a34a;
+  }
+  
+  /* ===== Responsive ===== */
+  @media (max-width: 640px) {
+    .item-group {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+  
+    .button-group {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+  /* โครงสร้างหลัก */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  
+  /* ฟอร์ม */
+  .delivery-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .form-group.full-width {
+    grid-column: span 2;
+  }
+  
+  /* ปุ่ม */
+  .button-group {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+  
+  .btn-primary {
+    background: #4CAF50;
+    color: white;
+  }
+  
+  .btn-secondary {
+    background: #2196F3;
+    color: white;
+  }
+  
+  .btn-danger {
+    background: #f44336;
+    color: white;
+  }
+  
+  .btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    color: inherit;
+  }
+  
+  /* รายการสิ่งของ */
+  .items-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .item-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .item-row input {
+    flex: 1;
+  }
+  
+  /* สถานะข้อความ */
+  .status-message {
+    text-align: center;
+    padding: 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    margin: 1rem 0;
+  }
+  
+  .status-message.success {
+    background: #d4edda;
+    color: #155724;
+  }
+  
+  .status-message.error {
+    background: #f8d7da;
+    color: #721c24;
+  }
+  
+  /* ปุ่มลอย */
+  .floating-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+  }
+
+  .form-group.custom-width {
+      grid-column: span 2  ; /* ปรับตรงนี้ให้ยาวขึ้นหรือสั้นลงได้ */
+    max-width: 75% ; 
+  }
+  
+
+  /* เพิ่มสไตล์สำหรับ select ที่มีขนาดเท่ากับ input */
+select {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    background: white;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+  }
+
+  .loading-state {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+  }
+  
+  .loading-state .fa-spinner {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+  }
+  
+  .empty-state .fa-box-open {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  /* เพิ่มในไฟล์ CSS */
+.search-filter-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+  }
+
+ 
+  /* Pagination */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .pagination button {
+    background-color: #2563eb;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  
+  .pagination button:hover {
+    background-color: #1d4ed8;
+  }
+  
+  .pagination button:disabled {
+    background-color: #d1d5db;
+    color: #6b7280;
+    cursor: not-allowed;
+  }
+  .pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .rows-per-page {
+    min-width: 100px;
+  }
+      
+  
+  .page-info {
+    font-size: 0.9rem;
+    color: #555;
+  }
+  
+  /* Action Menu */
+  .action-menu {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .action-menu-items {
+    display: none;
+    position: absolute;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 100;
+    min-width: 120px;
+  }
+  
+  .action-menu:hover .action-menu-items {
+    display: block;
+  }
+  
+  .action-menu-items button {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+  }
+  
+  .action-menu-items button:hover {
+    background: #f5f5f5;
+  }
+  
+  .action-menu-items button i {
+    margin-right: 0.5rem;
+    width: 16px;
+    text-align: center;
+  }
+  
+  .edit-btn { color: #2196F3; }
+  .delete-btn { color: #f44336; }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .search-filter-container {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  .delivery-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+  
+  .delivery-table th,
+  .delivery-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .delivery-table th {
+    background: #f3f4f6;
+    color: #111827;
+    font-weight: 600;
+  }
+  
+  .delivery-table tbody tr:hover {
+    background: #f9fafb;
+  }
+  
+  .delivery-table td:last-child {
+    white-space: nowrap;
+  }
+
+
+  .search-filter-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+  }
+  
+  .search-filter-container input {
+    flex: 1; /* ✅ ขยายช่อง input ให้ยืดได้เต็ม */
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+  }
+  
+  .search-filter-container select {
+    width: auto; /* ✅ ให้ขนาดพอดีกับเนื้อหา */
+    min-width: 180px;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    background-color: white;
+  }
+  
+  .table-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+  }
+  
+  .table-controls select {
+    padding: 0.4rem 0.6rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+  
+  .pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .pagination button {
+    background: #2563eb;
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .pagination button:hover {
+    background: #1d4ed8;
+  }
+  
+  .pagination button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+  
