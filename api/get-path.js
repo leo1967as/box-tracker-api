@@ -1,36 +1,39 @@
-// api/get-path.js
-const admin = require("firebase-admin");
+// ✅ /api/get-path.js
+import { db } from "../firebase";
 
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
-const db = admin.firestore();
+export default async function handler(req, res) {
+  if (req.method !== "GET") {
+    return res.status(405).json({ message: "Method Not Allowed" });
+  }
 
-module.exports = async (req, res) => {
   const { boxNumber } = req.query;
-  if (!boxNumber) return res.status(400).json({ message: "Missing boxNumber" });
+  if (!boxNumber) {
+    return res.status(400).json({ message: "Missing boxNumber" });
+  }
 
   try {
-    const snapshot = await db.collection("deliveries")
+    const snapshot = await db
+      .collection("deliveries")
       .where("boxNumber", "==", boxNumber)
       .limit(1)
       .get();
 
-      if (snapshot.empty) {
-        return res.status(404).json({ message: "Box not found", path: [] }); // ✅ มี path: [] กัน frontend พัง
-      }
+    if (snapshot.empty) {
+      return res.status(404).json({ message: "Box not found" });
+    }
+
     const deliveryId = snapshot.docs[0].id;
-    const positionsSnapshot = await db.collection("deliveries").doc(deliveryId).collection("positions").orderBy("timestamp", "asc").get();
+    const positionsSnapshot = await db
+      .collection("deliveries")
+      .doc(deliveryId)
+      .collection("positions")
+      .orderBy("timestamp", "asc")
+      .get();
 
-    const path = positionsSnapshot.docs.map(doc => ({
-      lat: doc.data().lat,
-      lng: doc.data().lng,
-      timestamp: doc.data().timestamp.toDate()
-    }));
-
+    const path = positionsSnapshot.docs.map((doc) => doc.data());
     return res.status(200).json({ boxNumber, path });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Internal error" });
+  } catch (error) {
+    console.error("❌ get-path error:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
-};
+}
